@@ -8,12 +8,10 @@ model = CrossEncoder(MODEL_NAME)
 
 def verify_claim(claim, evidences):
 
-    pairs = []
-
-    for evidence in evidences:
-        pairs.append(
-            (evidence, claim)
-        )
+    pairs = [
+        (evidence, claim)
+        for evidence in evidences
+    ]
 
     scores = model.predict(pairs)
 
@@ -31,9 +29,7 @@ def verify_claim(claim, evidences):
 
         results.append(result)
 
-    # If any evidence supports the claim,
-    # consider the claim supported.
-
+    # Strongest positive evidence wins
     if "entailment" in results:
         return "entailment"
 

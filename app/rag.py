@@ -1,9 +1,8 @@
 import os
 import chromadb
+
 from sentence_transformers import SentenceTransformer
-from llm import generate_answer
-from claims import extract_claims
-from verify import verify_claim
+from app.firewall import run_firewall
 
 
 # ============================================================
@@ -29,7 +28,7 @@ CHROMA_DIR = os.path.join(
 
 
 # ============================================================
-# 2. Load embedding model
+# 2. Embedding Model
 # ============================================================
 
 embedding_model = SentenceTransformer(
@@ -38,7 +37,7 @@ embedding_model = SentenceTransformer(
 
 
 # ============================================================
-# 3. Create ChromaDB
+# 3. ChromaDB
 # ============================================================
 
 chroma_client = chromadb.PersistentClient(
@@ -51,7 +50,7 @@ collection = chroma_client.get_or_create_collection(
 
 
 # ============================================================
-# 4. Split document into chunks
+# 4. Chunking
 # ============================================================
 
 def chunk_text(text, chunk_size=80):
@@ -72,7 +71,7 @@ def chunk_text(text, chunk_size=80):
 
 
 # ============================================================
-# 5. Load and chunk banking documents
+# 5. Load Banking Documents
 # ============================================================
 
 def load_documents():
@@ -83,50 +82,50 @@ def load_documents():
 
     for filename in os.listdir(DATA_DIR):
 
-        if filename.endswith(".txt"):
+        if not filename.endswith(".txt"):
+            continue
 
-            file_path = os.path.join(
-                DATA_DIR,
-                filename
+        file_path = os.path.join(
+            DATA_DIR,
+            filename
+        )
+
+        with open(
+            file_path,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            text = file.read()
+
+        chunks = chunk_text(text)
+
+        for index, chunk in enumerate(chunks):
+
+            documents.append(chunk)
+
+            metadatas.append({
+                "source": filename,
+                "chunk": index
+            })
+
+            ids.append(
+                f"{filename}_chunk_{index}"
             )
-
-            with open(
-                file_path,
-                "r",
-                encoding="utf-8"
-            ) as file:
-
-                text = file.read()
-
-            chunks = chunk_text(text)
-
-            for index, chunk in enumerate(chunks):
-
-                documents.append(chunk)
-
-                metadatas.append({
-                    "source": filename,
-                    "chunk": index
-                })
-
-                ids.append(
-                    f"{filename}_chunk_{index}"
-                )
 
     return documents, metadatas, ids
 
 
 # ============================================================
-# 6. Add chunks to ChromaDB
+# 6. Build / Update ChromaDB
 # ============================================================
 
 def build_database():
 
     documents, metadatas, ids = load_documents()
 
-    print(
-        f"Preparing {len(documents)} chunks..."
-    )
+    if not documents:
+        return 0
 
     embeddings = embedding_model.encode(
         documents
@@ -143,9 +142,11 @@ def build_database():
         f"Added {len(documents)} chunks to ChromaDB."
     )
 
+    return len(documents)
+
 
 # ============================================================
-# 7. Search knowledge base
+# 7. Retrieve Relevant Knowledge
 # ============================================================
 
 def search_knowledge(
@@ -162,11 +163,42 @@ def search_knowledge(
         n_results=n_results
     )
 
-    return results
+    return (
+        results["documents"][0],
+        results["metadatas"][0]
+    )
 
 
 # ============================================================
-# 8. Main test
+# 8. Complete Hallucination Firewall Pipeline
+# ============================================================
+
+def ask_question(question):
+
+    # Retrieve trusted evidence
+    documents, metadatas = search_knowledge(
+        question
+    )
+
+    # Run complete firewall
+    result = run_firewall(
+        question,
+        documents
+    )
+
+    # Add source information
+    result["sources"] = metadatas
+
+    result["retrieved_documents"] = documents
+
+    # Make names compatible with Streamlit
+    result["evidence"] = documents
+
+    return result
+
+
+# ============================================================
+# 9. Terminal Test
 # ============================================================
 
 if __name__ == "__main__":
@@ -186,104 +218,45 @@ if __name__ == "__main__":
 
             break
 
-        # ----------------------------------------------------
-        # Retrieve relevant evidence
-        # ----------------------------------------------------
-
-        results = search_knowledge(
+        result = ask_question(
             question
         )
 
-        retrieved_documents = (
-            results["documents"][0]
-        )
-
-        context = "\n\n".join(
-            retrieved_documents
-        )
-
+        print("\n--- ORIGINAL ANSWER ---")
         print(
-            "\n--- Retrieved Evidence ---\n"
+            result.get(
+                "answer",
+                ""
+            )
         )
 
-        for i, document in enumerate(
-            retrieved_documents
+        print("\n--- FIREWALL DECISION ---")
+        print(
+            result.get(
+                "safe_answer",
+                ""
+            )
+        )
+
+        print("\n--- CLAIM VERIFICATION ---")
+
+        for item in result.get(
+            "claims",
+            []
         ):
 
             print(
-                f"Evidence {i + 1}:"
+                f"[ALLOWED] "
+                f"{item['claim']}"
             )
 
-            print(document)
-
-            print(
-                f"Source: "
-                f"{results['metadatas'][0][i]['source']}"
-            )
-
-            print(
-                f"Chunk: "
-                f"{results['metadatas'][0][i]['chunk']}"
-            )
-
-            print(
-                "\n" + "-" * 60
-            )
-
-        # ----------------------------------------------------
-        # Generate answer using Llama
-        # ----------------------------------------------------
-
-        answer = generate_answer(
-            question,
-            context
-        )
-
-        print(
-            "\n--- Llama Answer ---\n"
-        )
-
-        print(answer)
-
-        # ----------------------------------------------------
-        # Extract factual claims
-        # ----------------------------------------------------
-
-        claims = extract_claims(
-            answer
-        )
-
-        print(
-            "\n--- Extracted Claims ---\n"
-        )
-
-        for i, claim in enumerate(
-            claims,
-            start=1
+        for item in result.get(
+            "blocked_claims",
+            []
         ):
 
             print(
-                f"Claim {i}: {claim}"
-            )
-
-        # ----------------------------------------------------
-        # Verify claims using NLI
-        # ----------------------------------------------------
-
-        print(
-            "\n--- NLI Verification ---\n"
-        )
-
-        for i, claim in enumerate(
-            claims,
-            start=1
-        ):
-
-            result = verify_claim(
-                claim,
-                retrieved_documents
-            )
-
-            print(
-                f"Claim {i}: {result}"
+                f"[BLOCKED - "
+                f"{item['result']}] "
+                f"{item['claim']}"
             )
