@@ -1,0 +1,21 @@
+BANKING KNOWLEDGE BASE - CARDS
+
+Debit Card
+
+A debit card allows customers to make purchases or withdraw cash using funds available in the linked account, subject to applicable limits.
+
+Customers should protect their card, PIN, and authentication information.
+
+Credit Card
+
+A credit card allows eligible customers to make purchases using a credit facility subject to the card's approved limit and terms.
+
+Credit card transactions may be subject to interest, fees, and other applicable charges depending on the transaction and card terms.
+
+Customers should make payments according to the billing statement and applicable due date.
+
+Card Security
+
+Customers should never share their PIN, CVV, OTP, password, or other confidential authentication information.
+
+If a card is lost or stolen, the customer should contact the bank promptly and follow the bank's card-blocking procedure.

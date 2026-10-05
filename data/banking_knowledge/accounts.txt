@@ -1,0 +1,27 @@
+BANKING KNOWLEDGE BASE - ACCOUNTS
+
+Savings Account
+
+A savings account allows customers to deposit money and earn interest on eligible balances.
+
+Customers can deposit and withdraw money from their savings account through supported banking channels.
+
+The bank may require customers to maintain a minimum balance depending on the type of savings account.
+
+Interest on savings accounts is calculated according to the applicable interest rate and account terms.
+
+Customers should check the applicable account terms and conditions for fees, minimum balance requirements, and interest rates.
+
+Current Account
+
+A current account is primarily designed for customers who need frequent transactions.
+
+Current accounts may have different fees, transaction limits, and balance requirements from savings accounts.
+
+Interest is generally not the primary feature of a current account.
+
+Account Security
+
+Customers should never share their PIN, password, OTP, CVV, or other authentication credentials with another person.
+
+Banks will not require customers to disclose confidential authentication credentials through unsolicited messages or calls.

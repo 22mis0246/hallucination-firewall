@@ -1,0 +1,21 @@
+BANKING KNOWLEDGE BASE - UPI
+
+UPI
+
+Unified Payments Interface (UPI) enables customers to make digital payments and transfers using supported UPI applications.
+
+UPI transactions require authentication according to the applicable payment method and bank or UPI service requirements.
+
+Transaction limits can vary depending on the bank, account, transaction type, and applicable rules.
+
+Customers should check their bank or payment application for the applicable transaction limit.
+
+UPI Security
+
+Customers should never share their UPI PIN with another person.
+
+A UPI PIN is used to authorize certain transactions.
+
+Customers should verify the recipient and transaction amount before approving a payment.
+
+Customers should report unauthorized transactions to their bank or the appropriate payment service as soon as possible.
