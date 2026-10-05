@@ -2,6 +2,8 @@ import os
 import chromadb
 from sentence_transformers import SentenceTransformer
 from llm import generate_answer
+from claims import extract_claims
+from verify import verify_claim
 
 
 # ============================================================
@@ -184,6 +186,10 @@ if __name__ == "__main__":
 
             break
 
+        # ----------------------------------------------------
+        # Retrieve relevant evidence
+        # ----------------------------------------------------
+
         results = search_knowledge(
             question
         )
@@ -224,6 +230,10 @@ if __name__ == "__main__":
                 "\n" + "-" * 60
             )
 
+        # ----------------------------------------------------
+        # Generate answer using Llama
+        # ----------------------------------------------------
+
         answer = generate_answer(
             question,
             context
@@ -234,3 +244,46 @@ if __name__ == "__main__":
         )
 
         print(answer)
+
+        # ----------------------------------------------------
+        # Extract factual claims
+        # ----------------------------------------------------
+
+        claims = extract_claims(
+            answer
+        )
+
+        print(
+            "\n--- Extracted Claims ---\n"
+        )
+
+        for i, claim in enumerate(
+            claims,
+            start=1
+        ):
+
+            print(
+                f"Claim {i}: {claim}"
+            )
+
+        # ----------------------------------------------------
+        # Verify claims using NLI
+        # ----------------------------------------------------
+
+        print(
+            "\n--- NLI Verification ---\n"
+        )
+
+        for i, claim in enumerate(
+            claims,
+            start=1
+        ):
+
+            result = verify_claim(
+                claim,
+                retrieved_documents
+            )
+
+            print(
+                f"Claim {i}: {result}"
+            )
